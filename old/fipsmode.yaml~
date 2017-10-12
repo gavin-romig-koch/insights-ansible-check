@@ -1,6 +1,0 @@
----
-- hosts: all
-  user: root
-  roles:
-   - role: fipsmode
-     fipsmode: "hello world"
