@@ -1,0 +1,9 @@
+---
+- hosts: all
+  tasks:
+
+  - debug: msg="{{ ansible_host }} is NOT in fips mode"
+    when: not ansible_fips
+
+  - debug: msg="{{ ansible_host }}  is in fips mode"
+    when: ansible_fips

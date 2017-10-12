@@ -1,0 +1,17 @@
+---
+- hosts: all
+  user: root
+  tasks:
+
+  - name: Is the prelink package absent?
+    package:
+      name: prelink
+      state: absent
+    check_mode: yes  # just checking
+    register: prelink_task
+
+  - debug: msg="prelink is NOT installed on {{ ansible_host }}"
+    when: not prelink_task|changed
+
+  - debug: msg="prelink is installed on {{ ansible_host }}"
+    when: prelink_task|changed
