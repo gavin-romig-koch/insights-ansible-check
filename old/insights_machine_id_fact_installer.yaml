@@ -1,0 +1,22 @@
+- hosts: all
+  user: root
+  tasks:
+
+    - name: Install redhat-access-insights
+      yum:
+        name: redhat-access-insights
+      register: install_insights_task
+
+    - name: If we just installed, also register
+      when: install_insights_task.changed
+      command: redhat-access-insights --register
+
+    - name: create directory for ansible custom facts
+      file: state=directory recurse=yes path=/etc/ansible/facts.d
+    - name: install custom impi fact
+      copy: src=insights.fact dest=/etc/ansible/facts.d mode=a+x
+    - name: re-read facts after adding custom fact
+      setup: filter=ansible_local
+    - debug: var=ansible_local.insights.machine_id
+    - debug: var=ansible_local.insights.system_id
+    - debug: var=ansible_local.insights

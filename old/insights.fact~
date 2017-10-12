@@ -1,0 +1,3 @@
+#!/bin/env bash
+echo "{ \"general\" : { \"insights_machine_id\" : \"$(cat /etc/redhat-access-insights/machine-id)\" } }"
+#echo { "\"general"\"insights_machine_id\"" : "\"$(cat /etc/redhat-access-insights/machine-id)\"" }

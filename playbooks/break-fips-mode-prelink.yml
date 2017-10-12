@@ -1,0 +1,12 @@
+- hosts: all
+  user: root
+  tasks:
+
+
+  - stat: path=/usr/sbin/prelink
+    register: prelink_command
+
+  - command: prelink -a
+    when: prelink_command.stat.exists
+    register: prelink_task
+    changed_when: prelink_task.stdout

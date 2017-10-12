@@ -1,0 +1,15 @@
+- hosts: all
+  user: root
+  tasks:
+
+  - stat: path=/usr/sbin/prelink
+    register: prelink_command
+
+  - name: Is anything currently prelinked?
+    when: prelink_command.stat.exists
+    check_mode: no
+    command: prelink -uavn
+    failed_when: no
+    register: unprelink_check_mode
+    changed_when: unprelink_check_mode.stdout
+

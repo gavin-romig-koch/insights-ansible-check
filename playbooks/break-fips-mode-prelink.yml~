@@ -1,0 +1,10 @@
+- hosts: all
+  user: root
+  tasks:
+
+  - package: name=prelink state=present
+
+  - command: prelink -av
+    register: prelink
+    changed_when: prelink.stdout
+

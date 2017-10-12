@@ -1,0 +1,9 @@
+#!/bin/bash
+if [ -e /etc/redhat-access-insights/machine-id ]; then
+    SYSTEM_ID=$(cat /etc/redhat-access-insights/machine-id)
+fi
+if [ -n "${SYSTEM_ID}" ]; then
+    echo "{ \"machine_id\" : \"${SYSTEM_ID}\", \"system_id\" : \"${SYSTEM_ID}\" }"
+else
+    echo
+fi

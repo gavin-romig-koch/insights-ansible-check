@@ -1,0 +1,12 @@
+---
+- hosts: all
+  user: root
+  tasks:
+
+  - name: Find the current default grubby entry
+    shell: grubby --info=$(grubby --default-kernel)
+    check_mode: no
+    changed_when: no
+    register: grubby_info_task
+
+  - debug: var=grubby_info_task

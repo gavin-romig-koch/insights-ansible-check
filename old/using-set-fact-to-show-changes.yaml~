@@ -1,0 +1,36 @@
+  - name: Query sysctl crypto.fips_enabled
+    command: sysctl -n crypto.fips_enabled 
+    changed_when: no
+    check_mode: no
+    register: command_sysctl_task
+
+  - debug: msg="What is fips mode {{ command_sysctl_task.stdout }}"
+
+  - debug: msg="Not fips mode {{ command_sysctl_task.stdout }}"
+    when: command_sysctl_task.stdout == '0'
+
+  - debug: msg="Yes fips mode {{ command_sysctl_task.stdout }}"
+    when: command_sysctl_task.stdout == '1'
+
+  - name: Is fips mode already enabled (sysctl crypto.fips_enabled)?
+    set_fact:
+      crypto_fips_enabled: "{{ command_sysctl_task.stdout != '0' }}"
+    changed_when: command_sysctl_task.stdout == '0'
+    register: fips_mode_task
+
+  - debug: msg="What is crypto_fips_enabled {{ crypto_fips_enabled  }}"
+
+  - debug: msg="Not crypto_fips_enabled"
+    when: not crypto_fips_enabled
+
+  - debug: msg="Yes crypto_fips_enabled"
+    when: crypto_fips_enabled
+
+  - debug: msg="What is not fips_mode_task.changed {{ not fips_mode_task.changed  }}"
+
+  - debug: msg="Not not fips_mode_task.changed"
+    when: not not fips_mode_task.changed
+
+  - debug: msg="Yes not fips_mode_task.changed"
+    when: not fips_mode_task.changed
+

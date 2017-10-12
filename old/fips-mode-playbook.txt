@@ -1,0 +1,169 @@
+
+
+For both RHEL6 and RHEL7
+
+    From:
+      https://access.redhat.com/solutions/137833 (How can I make RHEL 6 or RHEL 7 FIPS 140-2 compliant? )
+      
+    yum install dracut-fips
+
+    Dracut needs the path to the image file, and the version number of
+    the kernel.  By default Dracut uses the current running kernel's version,
+    and a default location for the related initrd
+
+    Prelink modifies the current running root device.
+    
+    But grubby modifies the boot configuration (kernel, initrd, and root
+    device) for what WILL be booted next time the machine boots that grub
+    configuration.
+
+    On a typical RHEL/Fedora installation stuff will just work out most
+    of the time, but things go wrong if there is a mismatch between what
+    prelink and dracut modify, and the grub config entry that grubby modifies.
+    The simplest way this can fail is if a new kernel gets installed, but
+    before we reboot into that kernel, fips-mode script runs, which modifies
+    the new grub entry, but the initrd file and kernel version of the still
+    currently running kernel.  
+
+    Because of the way we do prelink on the current root device, we need to
+    make sure the the grub entry we change is the same as the root partition
+    of the current root device.
+
+    Because of the way we do reboot which will reboot the default grub entry,
+    we need to modify that.  OR we need to build a new grub entry and make
+    that the default.
+
+    First pass try at this:
+
+    Only modify the default grub entry.
+
+    Check that root device specified in grub entry is current root device,
+       fail playbook if not.
+
+    Check that current kernel version matches kernel and initrd entries
+    in grub entry, fail playbook if not.
+
+    It would be possible to tell dracut
+    to modify the initrd using the kernel version and initrd information
+    from the grub entry.  The kernel version you pass to dracut must
+    be a directory in /lib/modules.  The kernel version is in the name
+    of all kernels shipped by RH.  The kernel version is available from
+    'file' on the kernel.img.  The kernel version is available from
+    'mkimage -l'.
+
+
+
+
+
+
+
+        
+
+    
+
+
+
+    Optional:
+       grep -qw aes /proc/cpuinfo && echo YES || echo no
+       if the above == 'YES':
+         yum install dracut-fips-aesni
+
+         if this command returns (on RHEL6 this returns) "No package dracut-fips-aesni available"
+            if the optional server or workstation repo is not enabled
+
+         yum-config-manager --enable rhel-6-server-optional-rpms --enable rhel-6-workstation-optional-rpms
+         yum install dracut-fips-aesni
+
+
+         rpm -q prelink && sed -i '/^PRELINKING/s,yes,no,' /etc/sysconfig/prelink
+         rpm -q prelink && prelink -uav
+
+         #Backup and rebuild the current initramfs
+         mv -v /boot/initramfs-$(uname -r).img{,.bak}
+         dracut
+
+         # add fips=1 and boot=<boot partition> to default boot cmd line
+         # FIXME:
+         #   note that the current kernel and the default boot kernel might be different
+         #   and we should deal with that better
+         grubby --update-kernel=$(grubby --default-kernel) --args=fips=1
+         uuid=$(findmnt -no uuid /boot)
+         [[ -n $uuid ]] && grubby --update-kernel=$(grubby --default-kernel) --args=boot=UUID=${uuid}
+
+         reboot
+
+         After the reboot:
+
+         sysctl crypto.fips_enabled
+         # should print '1'
+         
+
+For RHEL6:
+
+I was originally working from <below>:
+    but then i found 
+      https://access.redhat.com/solutions/137833 (How can I make RHEL 6 or RHEL 7 FIPS 140-2 compliant? )
+      https://access.redhat.com/solutions/2422061 (How to disable FIPS mode in RHEL 6 or RHEL 7 )
+
+     also see:
+      https://access.redhat.com/solutions/303333 (Is version X of Red Hat Enterprise Linux FIPS 140-2 certified/validated/compliant? )
+
+     my first attempt at this (using instructions below) ended in
+        https://access.redhat.com/solutions/335853  (Kernel panic after making Red Hat Enterprise Linux 6 FIPS 140-2 compliant. )
+        Though i don't think i had the boot=parameter wrong.
+        
+        I used vmm to get to the console, and edited the kernel command line to remove fips=1
+        then tried again using the above instructions.
+        Somehow i ended up with an empty grub.conf, which i decided not to try to fix, so just
+        deleted the vm
+
+        Next I'm trying to redo the above instructions, using rhel-6.5, centos-6, and fedora-??
+
+
+        
+
+I was originally working from:
+  https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Security_Guide/sect-Security_Guide-Federal_Standards_And_Regulations-Federal_Information_Processing_Standard.html
+
+  This guide states:
+     Should you require strict FIPS compliance, the fips=1 kernel option needs to be added
+     to the kernel command line during system installation so that key generation is done
+     with FIPS approved algorithms and continuous monitoring tests in place. Users should
+     also ensure that the system has plenty of entropy during the installation process by moving
+     the mouse around, or if no mouse is available, ensuring that many keystrokes are typed. The
+     recommended amount of keystrokes is 256 and more. Less than 256 keystrokes may generate
+     a non-unique key. 
+
+
+Check that within /etc/sysconfig/prelink:
+  PRELINKING=no
+
+if it is not == 'no' (it should be 'yes', but need to check what effective values of this are (see man page, or scripts)
+  then
+
+(it would be nice if there was a way to determine if any libraries are prelinked
+(or not in fips mode) without installing prelink -- look at the prelink command esp if it
+is a script, and look at what dracut-fips installs and does to check FIPS mode)
+if prelink package (prelink command is not installed:
+    install prelink command
+run prelink -uanv to see if any libraries are prelinked
+     -u un-prelink
+     -a all
+     -n dry-run (don't actually do anything)
+     -v verify show output
+if there are any libraries shown
+     run prelink -ua
+
+
+
+
+yum install dracut-fips
+     This enables FIPS integrity verification:
+      FIPS integrity verification is performed when the dracut-fips package is present on
+      the system, regardless of whether the system operates in FIPS mode or not. However,
+      the integrity verification results are ignored (or only logged) if the system
+      or a shared library is not in FIPS mode, even when dracut-fips is present. 
+
+dracut -f
+   This rebuilds the initrd
+

@@ -1,0 +1,13 @@
+---
+- hosts: all
+  user: root
+  tasks:
+
+  # Find the current default grubby entry.
+  - name: Update grub entries for current kernel
+    shell: grubby --info=$(grubby --default-kernel)
+    check_mode: no
+    changed_when: no
+    register: grubby_task
+
+  - debug: var=grubby_task

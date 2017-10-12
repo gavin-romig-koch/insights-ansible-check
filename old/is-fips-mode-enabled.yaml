@@ -1,0 +1,26 @@
+- hosts: all
+  user: root
+  tasks:
+
+  - name: Lookup the current state of crypto.fips_enabled 
+    command: sysctl -n crypto.fips_enabled 
+    changed_when: no
+    check_mode: no
+    register: sysctl_task
+
+  - debug: var=sysctl_task.stdout
+
+  - debug: msg="Yes FIPS mode enabled"
+    when: sysctl_task.stdout != "0"
+
+  - debug: msg="No FIPS mode not enabled"
+    when: sysctl_task.stdout != "1"
+
+  - name: Check that we are in crypto.fips_enabled mode
+    sysctl:
+      key: crypto.fips_enabled
+      value: 1
+      reload: no
+      state: present
+    check_mode: yes
+    

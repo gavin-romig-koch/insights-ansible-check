@@ -1,0 +1,10 @@
+- hosts: all
+  user: root
+  tasks:
+
+  - debug: var=ansible_distribution
+
+  - set_fact:
+      ansible_distribution: "Gavin"
+
+  - debug: var=ansible_distribution

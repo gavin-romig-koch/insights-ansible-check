@@ -1,0 +1,9 @@
+- hosts: all
+  user: root
+  tasks:
+
+  - set_fact:
+      test_fact: False
+
+  - set_fact:
+      test_fact: True

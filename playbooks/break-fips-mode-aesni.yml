@@ -1,0 +1,5 @@
+- hosts: all
+  user: root
+  tasks:
+
+  - package: name=dracut-fips-aesni state=absent

@@ -1,0 +1,9 @@
+- hosts: all
+  user: root
+  tasks:
+
+  - command: grubby --info=DEFAULT | sed -e 's/^root=\(.*\)$/\1/;t;d'
+    check_mode: no
+    register: get_root_task
+
+  - debug: var=get_root_task.stdout

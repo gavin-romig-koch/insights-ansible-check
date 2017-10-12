@@ -1,0 +1,40 @@
+- hosts: all
+  user: root
+  tasks:
+
+
+  - when: ansible_fips
+    block:
+    - name: Update grub entries for current kernel
+      command: grubby --update-kernel=DEFAULT --remove-args="fips boot"
+
+    - name: Reboot
+      shell: sleep 2 && reboot
+      async: 1
+      poll: 0
+      ignore_errors: true
+      when: not ansible_check_mode
+
+    - name: Wait for system to boot up
+      local_action: wait_for host={{ inventory_hostname }} port=22 state=started delay=15 timeout=300
+      become: false
+
+  - name: Install prelink package
+    package:
+      name: prelink
+
+  - name: Prelink everything
+    command: prelink -a
+
+  - name: Remove the dracut-fips packages
+    package:
+      name:
+        - dracut-fips-aesni
+        - dracut-fips
+      state: absent
+ 
+  - name: Rebuild current initrd
+    command: dracut --force /boot/initramfs-{{ ansible_kernel }}.img {{ ansible_kernel }}  
+
+  - name: Update grub entries for current kernel
+    command: grubby --update-kernel=/boot/vmlinuz-{{ ansible_kernel }} --remove-args="fips boot"

@@ -1,0 +1,17 @@
+- hosts: all
+  user: root
+  tasks:
+
+  - name: Are we in fips mode already?
+    command: sysctl -n crypto.fips_enabled 
+    changed_when: no
+    check_mode: no
+    register: sysctl_task
+
+  - debug: var=sysctl_task.stdout
+
+  - debug: msg="Yes FIPS mode enabled"
+    when: sysctl_task.stdout != "0"
+
+  - debug: msg="No FIPS mode not enabled"
+    when: sysctl_task.stdout != "1"

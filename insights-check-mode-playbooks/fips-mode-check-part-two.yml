@@ -1,0 +1,19 @@
+---
+- hosts: all
+  user: root
+  tasks:
+
+  - name: Is fips mode already enabled? (using set_fact)
+    set_fact:
+      dummy: False
+    changed_when: not ansible_fips
+
+#  - name: Is fips mode already enabled? (using assert)
+#    assert:
+#      that: ansible_fips
+#      msg: "this is a test"
+
+  - name: Is fips mode already enabled? (using check)
+    check:
+      that: ansible_fips
+      msg: "this is a test"

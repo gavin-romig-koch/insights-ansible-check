@@ -1,0 +1,18 @@
+- hosts: all
+  user: root
+  tasks:
+
+  - name: Are we in crypto.fips_enabled
+    sysctl:
+      key: crypto.fips_enabled
+      value: 1
+    check_mode: yes
+    register: sysctl_fips_mode_task
+
+  - debug: msg="What is not sysctl_fips_mode_task.changed {{ not sysctl_fips_mode_task.changed  }}"
+
+  - debug: msg="Not not sysctl_fips_mode_task.changed"
+    when: not not sysctl_fips_mode_task.changed
+
+  - debug: msg="Yes not sysctl_fips_mode_task.changed"
+    when: not sysctl_fips_mode_task.changed

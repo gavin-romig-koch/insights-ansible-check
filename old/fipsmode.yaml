@@ -1,0 +1,6 @@
+---
+- hosts: all
+  user: root
+  roles:
+   - role: notify-insights
+   - role: fipsmode

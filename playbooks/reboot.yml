@@ -1,0 +1,10 @@
+- hosts: all
+  user: root
+  tasks:
+
+  - name: Reboot
+    shell: sleep 2 && reboot
+    async: 1
+    poll: 0
+    ignore_errors: true
+    when: not ansible_check_mode

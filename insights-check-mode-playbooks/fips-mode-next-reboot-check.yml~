@@ -1,0 +1,39 @@
+---
+# This is still a work in progress.
+# In fact it is barely started
+#
+- hosts: all
+  user: root
+  tasks:
+
+  # Find the current default grubby entry.
+  - name: Update grub entries for current kernel
+    shell: grubby --info=$(grubby --default-kernel) | grep ^args
+    check_mode: no
+    changed_when: no
+    register: grubby_task
+
+  - debug: var=grubby_task
+
+    # if it is already set up for fips mode, do nothing else
+    # otherwise,
+    #   if the kernel version to be booted IS NOT the kernel we are running now, fail with message.
+    #   if the root device to be booted IS NOT the current boot device, fail with message
+    #   otherwise
+    #     continue with all of what are doing below except for the grubby command
+    #        which shoud be changed to --update the default entry, rather than the ones with the
+    #          given kernel version
+  
+    # It might also make sense for us to create a new grubby entry with fips mode, rather than
+    # change the current one.
+    #
+    # We should (possibly?) also be setting the default kernel parameters in grubby.conf
+    #
+    # We should (possibly?) also be installing prelink, and then uninstalling it, to look for
+    # and unprelink, and prelinked DSOs. Or we should find another way to test for the existance
+    # of prelinked DSOs (there must be one, i just don't know what it is off the top of my head).
+    #
+    # We should build and use grubby, dracut, and sysctl modules (or similar) that work well in
+    # --check mode.  There currently is no grubby or dracut modules, and the sysctl module does
+    # not work well for crypto.fips_enabled in --check mode because of the read-only nature of
+    # crypto.fips_enabled.

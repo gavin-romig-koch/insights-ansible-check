@@ -1,0 +1,23 @@
+- hosts: all
+  user: root
+  tasks:
+
+  - name: Install prelink package
+    package:
+      name: prelink
+
+  - name: Prelink everything
+    command: prelink -a
+
+  - name: Remove the dracut-fips packages
+    package:
+      name:
+        - dracut-fips-aesni
+        - dracut-fips
+      state: absent
+ 
+  - name: Rebuild current initrd
+    command: dracut --force /boot/initramfs-{{ ansible_kernel }}.img {{ ansible_kernel }}  
+
+  - name: Update grub entries for current kernel
+    command: grubby --update-kernel=/boot/vmlinuz-{{ ansible_kernel }} --remove-args="fips boot"

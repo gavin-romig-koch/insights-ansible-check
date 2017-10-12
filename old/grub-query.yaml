@@ -1,0 +1,15 @@
+- hosts: all
+  user: root
+  tasks:
+
+  - shell: grubby --info=DEFAULT | sed -e 's/^root=\(.*\)$/\1/;t;d'
+    check_mode: no
+    register: get_root_task
+
+  - debug: var=get_root_task.stdout
+
+  - command: findmnt --noheadings --output=SOURCE --target /
+    check_mode: no
+    register: get_root_device_task
+
+  - debug: var=get_root_device_task.stdout
