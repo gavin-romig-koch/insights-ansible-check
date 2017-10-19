@@ -1,0 +1,9 @@
+---
+- hosts: all
+  user: root
+  tasks:
+
+  - name: prelink package must be absent (not installed)
+    package:
+      name: prelink
+      state: absent
