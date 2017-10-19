@@ -1,138 +1,70 @@
 
-Using Ansible's --check mode to check if a system is in a given state rather than to ensure
-that it is in a given state by first checking and changing if not.
+Custom Insights Rules as Ansible Playbooks, Ansible Playbooks that act as Insights Rules
 
-Say that you want to run a spot check that some set of your systems are in fips mode. Ansible
-has a fact named 'ansible_fips' which will tell you, true/false, is the system in fips mode.
-OK great, almost done, scribble down a playbook that checks 'ansible_fips' and prints out a
-message.
+This is just the beginnings of a proof of concept.
 
----
-- hosts: all
-  tasks:
+The general idea is that we run mostly normal Ansible playbooks in --check mode, and
+interpret the result of each task in the playbook as a conformance test, and then forward
+those interpreted results to Insights for display.
 
-  - debug: msg="{{ ansible_host }} is NOT in fips mode"
-    when: not ansible_fips
+Until we have a way to forward the result to Insights, we just print the interpreted results
+out.
 
-  - debug: msg="{{ ansible_host }}  is in fips mode"
-    when: ansible_fips
+There are currently just two example Insights Rules written as Ansible Playbooks:
+   insights-check-mode-playbooks/fips-mode-check.yml
+     Which checks that a system is in FIPS mode.
+   
+   insights-check-mode-playbooks/prelink-absent-check.yml
+     Which checks that a system does not have the prelink package installed.
 
-You run this against the systems in question and ansible-playbook will print out:
+Use these playbooks with:
+  ansible-playbook --check --limit=<HOST PATTERN> <CHECK PLAYBOOK>
+
+where
+  <HOST PATTERN> is a comma separated list of hosts to run the check against
+  <CHECK PLAYBOOK> is one of 
+    insights-check-mode-playbooks/fips-mode-check.yml
+    insights-check-mode-playbooks/prelink-absent-check.yml
+
+You can use your development machine as <HOST PATTERN>, but for fips mode, the results will
+probably be booring.
+
+You can create new <CHECK PLAYBOOKS> but, for the time being, all playbooks must be in the
+insights-check-mode-playbooks directory to take advantage of "Insights Check Mode".
 
 
-PLAY [all] **********************************************************************************************
+Insights Check Mode
 
-TASK [Gathering Facts] **********************************************************************************
-ok: [gavin-rhel6-fips]
-ok: [gavin-rhel66-epel1]
+When a playbook is run in "Insights Check Mode", a new "CHECKMODE SUMMARY" is added to the
+end of the normal output from running the playbook.
 
-TASK [debug] ********************************************************************************************
-skipping: [gavin-rhel66-epel1]
-ok: [gavin-rhel6-fips] => {
-    "msg": "gavin-rhel6-fips is NOT in fips mode"
-}
+In the example below are two RHEL 6.6 machines, one with FIPS mode enabled one without.
 
-TASK [debug] ********************************************************************************************
-skipping: [gavin-rhel6-fips]
-ok: [gavin-rhel66-epel1] => {
-    "msg": "gavin-rhel66-epel1  is in fips mode"
-}
-
-PLAY RECAP **********************************************************************************************
-gavin-rhel6-fips           : ok=2    changed=0    unreachable=0    failed=0
-gavin-rhel66-epel1         : ok=2    changed=0    unreachable=0    failed=0
-
-Assuming you ran it against two systems, gavin-rhel6-fips that is NOT fips enabled and gavin-rhel66-epel1 that is not fips enabled.
-
-Now all you need are some scripts (sed, awk, grep, bash, python, your favorite tool) that filter out
-the clutter and get you down to something like:
-
-  gavin-rhel6-fips is NOT in fips mode
-  gavin-rhel66-epel1  is in fips mode
-
-This repo is about what if we use the power of Ansible to avoid having to write "some scripts".
-
-But before we go there, let's look at another hypothetical.
-
-Say that you want to run a spot check that some set of your systems do not have the prelink package
-installed.  Ansible has blah, blah, blah... OK great, almost done, scribble down a playbook:
-
----
-- hosts: all
-  user: root
-  tasks:
-
-  - package:
-      name: prelink
-      state: absent
-    check_mode: yes  # just checking
-    register: prelink_task
-
-  - debug: msg="prelink is NOT installed on {{ ansible_host }}"
-    when: not prelink_task|changed
-
-  - debug: msg="prelink is installed on {{ ansible_host }}"
-    when: prelink_task|changed
-
-Remember, we want to confirm that the prelink package is absent (NOT installed), that's the
-state we care about, that's the state we want to mark as "ok".  Anything else is NOT "ok" for
-the purposes of this example.  Ansible is about describing the state you want the machine in.
-
-You run this playbook against the same systems as above and get the output:
+$ ansible-playbook --check --limit=gavin-rhel66-nofips,gavin-rhel66-yesfips insights-check-mode-playbooks/fips-mode-check.yml 
 
 PLAY [all] **********************************************************************************************
 
 TASK [Gathering Facts] **********************************************************************************
-ok: [gavin-rhel6-fips]
-ok: [gavin-rhel66-epel1]
+ok: [gavin-rhel66-nofips]
+ok: [gavin-rhel66-yesfips]
 
-TASK [Is the prelink package absent?] *******************************************************************
-changed: [gavin-rhel6-fips]
-ok: [gavin-rhel66-epel1]
-
-TASK [debug] ********************************************************************************************
-skipping: [gavin-rhel6-fips]
-ok: [gavin-rhel66-epel1] => {
-    "msg": "prelink is NOT installed on gavin-rhel66-epel1"
-}
-
-TASK [debug] ********************************************************************************************
-skipping: [gavin-rhel66-epel1]
-ok: [gavin-rhel6-fips] => {
-    "msg": "prelink is installed on gavin-rhel6-fips"
-}
+TASK [fips mode must be enabled] ************************************************************************
+changed: [gavin-rhel66-nofips]
+ok: [gavin-rhel66-yesfips]
 
 PLAY RECAP **********************************************************************************************
-gavin-rhel6-fips           : ok=3    changed=1    unreachable=0    failed=0
-gavin-rhel66-epel1         : ok=3    changed=0    unreachable=0    failed=0
+gavin-rhel66-nofips        : ok=2    changed=1    unreachable=0    failed=0   
+gavin-rhel66-yesfips       : ok=2    changed=0    unreachable=0    failed=0   
 
 
-And we can use most if not all of the scripts we wrote for the previous case to filter this output
-down to something usable.
+CHECKMODE SUMMARY ***************************************************************************************
+gavin-rhel66-nofips
+    no : fips mode must be enabled
+gavin-rhel66-yesfips
+    ok : fips mode must be enabled
 
-Of course, Ansible experts, and even the moderately observant Ansible-newbies will point out that all
-that those two debug:when: tasks are superfluous in this case.  The task named "Is the prelink package
-absent?"  already tells us if prelink is absent or not.  The line "ok: [gavin-rhel66-epel1]" tells
-us that the system gavin-rhel66-epel1 is in the state we specified, and "changed: [gavin-rhel6-fips]"
-tells us that gavin-rhel6-fips is NOT.  Remember, we are running in check mode, so gavin-rhel6-fips
-was not actually changed, it just would be changed if we were not running in check mode.  We wrote
-the two debug:when: tasks because for facts, there isn't a single task/module that will tell
-us if the fact is in a given state or not.  But Ansible is extendable...
 
-Ansible has a module Assert that does sorta what we want.  Assert checks that an expression is
-true which would let us check that a fact was in a given state.  But, when the expression is false,
-assert fails, and doesn't run any further tasks on that system.  We don't want to check and fail,
-we just want to check and print out yes/no.  Ideally we would like our new check module to print
-out "ok"/"changed" to parallel what other modules do in check mode.  "ok" means yes the system is
-in the state you require, "changed" means "no" the system is not in the state you require.
+In the CHECKMODE SUMMARY, the final "no" and "ok" are the important bits.  The label "no" is a
+big red "X", no this system is NOT in fips mode.  The label "yes" is a green checkmark, yes the
+system is in fips mode.
 
-We go get the assert module.  Yea for Open Source.  Preserve the License, Copyright, and Credit
-statements.  And a few small changes later, we have a check module that returns "ok"/"changed"
-just like a normal module.
-
-Now we can write check mode playbooks that checks both facts and modules uniformly.
-
-The next step is that we are trying to confirm that a set of systems are in a given state.  It would
-be better if the output from the playbook run concentrated on that.  We would like to get just a
-summary of what machines are and are not in the given state, and if not, which checks (tasks) on
-which systems we not in the given state.  Ansible is extendable....
