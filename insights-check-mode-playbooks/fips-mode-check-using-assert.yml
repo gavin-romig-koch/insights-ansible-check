@@ -1,0 +1,10 @@
+---
+- hosts: all
+  user: root
+  tasks:
+
+  - name: Is fips mode already enabled? (using assert module)
+    assert:
+      that: ansible_fips
+      msg: "fips mode NOT enabled"
+

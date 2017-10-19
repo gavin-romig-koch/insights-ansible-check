@@ -1,0 +1,9 @@
+---
+- hosts: all
+  user: root
+  tasks:
+  - name: Is fips mode already enabled? (using set_fact module)
+    set_fact:
+      dummy: False
+    changed_when: not ansible_fips
+  

@@ -2,8 +2,8 @@
 - hosts: all
   user: root
   tasks:
-  - name: Is fips mode already enabled?
-    set_fact:
-      dummy: False
-    changed_when: not ansible_fips
-  
+
+  - name: Is fips mode already enabled? (using check module)
+    check:
+      that: ansible_fips
+      msg: "fips mode is NOT enabled"
