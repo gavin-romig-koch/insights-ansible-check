@@ -37,13 +37,29 @@
     # ansible-playbook-foo is not up to that yet.  The script could also be modified to
     # reboot before running.  Another posibility is that this script could simply create
     # a new default grubby entry, leaving the existing entries untouched.
-    
+
+    # Actual Playbook starts here
+
+    # Reboot machine and wait for reboot to ensure we have booted from DEFAULT grub entry
+    - name: Reboot machine into DEFAULT grub entry
+      shell: sleep 2 && reboot
+      async: 1
+      poll: 0
+      ignore_errors: true
+      when: not ansible_check_mode   # can't run async jobs in check_mode
+
+    - name: Wait for system to boot up into DEFAULT grub entry
+      local_action: wait_for host={{ inventory_hostname }} port=22 state=started delay=15 timeout=300
+      become: false
+
     - name: Is the prelink package absent?
       package: name=prelink state=absent
       check_mode: yes
       failed_when: no
       register: prelink_absent
-  
+
+    # Assume that nothing is prelinked if prelink is not installed
+    #    This is a dangerous assumption - see above
     - name: Unprelink everything
       when: prelink_absent.changed
       check_mode: no
@@ -55,22 +71,25 @@
     - name: Remove the prelink package
       package: name=prelink state=absent
       failed_when: no
-  
-    - name: Install dracut-fips
-      package: name=dracut-fips state=present
-  
+
+
+    # Install dracut-fips or dracut-fips-aesni
     - name: Does the hardware and kernel support aes?
       command: grep -w aes /proc/cpuinfo
       failed_when: no
       changed_when: no
       check_mode: no
-      register: is_aesni
+      register: is_aesni_task
 
+    - name: Install dracut-fips
+      package: name=dracut-fips state=present
+      when: is_aesni_task.rc
+  
     # This sometimes fails on RHEL6 because of mismatched versions of dracut-fips and dracut-fips-aesni
     #  since it is optional, just ignore failures
-    - name: Install dracut-fips-aesni if it is supported
+    - name: Install dracut-fips-aesni
       package: name=dracut-fips-aesni state=present
-      when: not is_aesni.rc
+      when: not is_aesni_task.rc
       failed_when: no
   
     - name: Rebuild current initrd
@@ -85,3 +104,14 @@
     - name: Update grub entries for current kernel
       command: grubby --update-kernel=/boot/vmlinuz-{{ ansible_kernel }} --args="fips=1 boot=UUID={{ findmnt_boot_task.stdout }}"
     
+    - name: Reboot into FIPS mode
+      shell: sleep 2 && reboot
+      async: 1
+      poll: 0
+      ignore_errors: true
+      when: not ansible_check_mode   # can't run async jobs in check_mode
+
+    - name: Wait for reboot into FIPS mode
+      local_action: wait_for host={{ inventory_hostname }} port=22 state=started delay=15 timeout=300
+      become: false
+
