@@ -3,7 +3,7 @@
   user: root
   tasks:
 
-  - name: Is fips mode already enabled? (using check module)
+  - name: fips mode must be enabled
     check:
       that: ansible_fips
       msg: "fips mode is NOT enabled"
