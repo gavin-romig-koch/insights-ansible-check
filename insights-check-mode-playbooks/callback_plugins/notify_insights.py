@@ -127,11 +127,24 @@ class CallbackModule(CallbackBase):
     def append_result(self, result, event_name):
         task_name = result._task.get_name()
         host_name = result._host.get_name()
+
         if "ansible_facts" in result._result:
             if "ansible_local" in result._result["ansible_facts"]:
                 if "insights" in result._result["ansible_facts"]["ansible_local"]:
                     if "system_id" in result._result["ansible_facts"]["ansible_local"]["insights"]:
                         self.insights_system_ids[host_name] = result._result["ansible_facts"]["ansible_local"]["insights"]["system_id"]
+
+        if isinstance(result._task, TaskInclude):
+            # probably don't have to treat TaskInclude tasks special for this plugin
+            #   but default callback does, so leave this for now
+            return
+
+        elif result._task.action == 'setup':
+            # we want to remove at least the initial automatic implicit call to the setup module
+            # this ignores all calls to setup, implicit or explicit
+            # good enough for now
+            return
+
         self.items[host_name].append((event_name, task_name, result._result))
 
 
@@ -146,11 +159,7 @@ class CallbackModule(CallbackBase):
     def v2_runner_on_ok(self, result):
         # This follows the logic of this function in the 'default.py' callback
         # but all we need to determine is "changed" vs "ok"
-
-        if isinstance(result._task, TaskInclude):
-            # probably don't have to tread TaskInclude tasks special for this plugin
-            return
-        elif result._result.get('changed', False):
+        if result._result.get('changed', False):
             self.append_result(result, "changed")
         else:
             self.append_result(result, "ok")
