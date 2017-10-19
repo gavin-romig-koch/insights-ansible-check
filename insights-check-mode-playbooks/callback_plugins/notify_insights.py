@@ -32,6 +32,8 @@ class CallbackModule(CallbackBase):
     CALLBACK_VERSION = 2.0
     CALLBACK_TYPE = 'notification'
     CALLBACK_NAME = 'notify_insights'
+
+    # Ara doesn't define this at all
     CALLBACK_NEEDS_WHITELIST = False
 
     TIME_FORMAT = "%Y-%m-%d %H:%M:%S %f"
