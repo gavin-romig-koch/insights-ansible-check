@@ -76,7 +76,7 @@ class CallbackModule(CallbackBase):
                 self.banner_printed = True
 
             if "insights_system_id" in report:
-                self._display.display("%s SYSTEM ID %s" % (report["host"], report["insights_system_id"]))
+                self._display.display("%s\t\t%s" % (report["host"], report["insights_system_id"]))
             else:
                 self._display.display("%s" % (report["host"]))
             
