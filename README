@@ -42,27 +42,26 @@ In the example below are two RHEL 6.6 machines, one with FIPS mode enabled one w
 
 $ ansible-playbook --check --limit=gavin-rhel66-nofips,gavin-rhel66-yesfips insights-check-mode-playbooks/fips-mode-check.yml 
 
-PLAY [all] **********************************************************************************************
+PLAY [all] *********************************************************************
 
-TASK [Gathering Facts] **********************************************************************************
+TASK [Gathering Facts] *********************************************************
 ok: [gavin-rhel66-nofips]
 ok: [gavin-rhel66-yesfips]
 
-TASK [fips mode must be enabled] ************************************************************************
+TASK [fips mode must be enabled] ***********************************************
 changed: [gavin-rhel66-nofips]
 ok: [gavin-rhel66-yesfips]
 
-PLAY RECAP **********************************************************************************************
+PLAY RECAP *********************************************************************
 gavin-rhel66-nofips        : ok=2    changed=1    unreachable=0    failed=0   
 gavin-rhel66-yesfips       : ok=2    changed=0    unreachable=0    failed=0   
 
 
-CHECKMODE SUMMARY ***************************************************************************************
-gavin-rhel66-nofips
+CHECKMODE SUMMARY **************************************************************
+gavin-rhel66-nofips		7ce9d65c-729d-4769-b038-db725bb69641
     no : fips mode must be enabled
-gavin-rhel66-yesfips
+gavin-rhel66-yesfips		31efea29-6020-4dfa-be47-f1aca02fba28
     ok : fips mode must be enabled
-
 
 In the CHECKMODE SUMMARY, the final "no" and "ok" are the important bits.  The label "no" is a
 big red "X", no this system is NOT in fips mode.  The label "yes" is a green checkmark, yes the
