@@ -1,6 +1,5 @@
 ---
 - hosts: all
-  user: root
   tasks:
 
   - name: fips mode must be enabled
