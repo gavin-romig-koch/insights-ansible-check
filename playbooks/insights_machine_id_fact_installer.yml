@@ -2,9 +2,15 @@
   user: root
   tasks:
 
+    - name: need libselinux-python to run ansible on RHEL
+      yum:
+        name: libselinux-python
+        state: present
+
     - name: Install redhat-access-insights
       yum:
         name: redhat-access-insights
+        state: present
       register: install_insights_task
 
     - name: If we just installed, also register
