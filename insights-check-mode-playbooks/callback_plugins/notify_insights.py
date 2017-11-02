@@ -19,6 +19,7 @@ from datetime import datetime
 from collections import defaultdict
 import json
 import time
+import os
 
 from ansible import constants as C
 from ansible.playbook.task_include import TaskInclude
@@ -58,37 +59,42 @@ class CallbackModule(CallbackBase):
         return logs
 
     def send_report(self,report):
+        if not self.banner_printed:
+            self._display.banner("CHECKMODE SUMMARY")
+            self.banner_printed = True
+
         if False:
-            # Can't actually send this to Insight's yet, because no API yet
-            if "insights_system_id" in report:
-                filename = "report_%s_ID_%s.txt" % (report["host"], report["insights_system_id"])
-            else:
-                filename = "report_%s.txt" % report["host"]
-
-            with open(filename, 'w') as the_file:
-                the_file.write(json.dumps(report))
-                self._display.display("Insights report written to %s" % filename)
-        else:
-            # Instead we print out a short summary of "changed", "ok", "fatal" and Title
-            #   skip "skipping"
-            if not self.banner_printed:
-                self._display.banner("CHECKMODE SUMMARY")
-                self.banner_printed = True
-
+            # Print out a short summary of the test tasks
             if "insights_system_id" in report:
                 self._display.display("%s\t\t%s" % (report["host"], report["insights_system_id"]))
             else:
                 self._display.display("%s" % (report["host"]))
-            
+
             for each in report["task_results"]:
                 if each["_insights_event_name"] != "skipped":
                     self._display.display(self._format_summary_for(each))
                     #print(json.dumps(each, indent=2))
+        else:
+            if "insights_system_id" in report:
+                policy_result = {
+                    "raw_output": "",
+                    "check_results": []
+                }
+                for each in report["task_results"]:
+                    if each["_insights_event_name"] != "skipped":
+                        policy_result["check_results"].append({
+                            "name": each["_insights_task_title"],
+                            "result": each["_insights_event_name"]
+                        })
+
+                self._display.display("PUT /systems/%s/policies/%s" %(report["insights_system_id"],
+                                                                  self.playbook_name))
+                self._display.display(json.dumps(policy_result, indent=2))
 
     def _format_summary_for(self, task_result):
-        if task_result["_insights_event_name"] == "ok":
+        if task_result["_insights_event_name"] == "passed":
             icon = stringc("ok", C.COLOR_OK) 
-        elif task_result["_insights_event_name"] == "changed":
+        elif task_result["_insights_event_name"] == "failed":
             icon = stringc("no", C.COLOR_ERROR)
         elif task_result["_insights_event_name"] == "fatal":
             icon = stringc("ERROR", C.COLOR_ERROR)
@@ -152,17 +158,20 @@ class CallbackModule(CallbackBase):
     #
     #
     #
+    def v2_playbook_on_start(self, playbook):
+        self.playbook_name = os.path.splitext(os.path.basename(playbook._file_name))[0]
 
     def v2_runner_on_failed(self, result, ignore_errors=False):
-        self.append_result(result, "failed")
+        self.append_result(result, "error")
 
     def v2_runner_on_ok(self, result):
         # This follows the logic of this function in the 'default.py' callback
         # but all we need to determine is "changed" vs "ok"
+        # which we translate to "failed" vs "passed"
         if result._result.get('changed', False):
-            self.append_result(result, "changed")
+            self.append_result(result, "failed")
         else:
-            self.append_result(result, "ok")
+            self.append_result(result, "passed")
 
     def v2_runner_on_skipped(self, result):
         self.append_result(result, "skipped")
