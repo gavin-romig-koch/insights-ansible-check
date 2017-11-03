@@ -63,7 +63,7 @@ class CallbackModule(CallbackBase):
             self._display.banner("CHECKMODE SUMMARY")
             self.banner_printed = True
 
-        if False:
+        if True:
             # Print out a short summary of the test tasks
             if "insights_system_id" in report:
                 self._display.display("%s\t\t%s" % (report["host"], report["insights_system_id"]))
