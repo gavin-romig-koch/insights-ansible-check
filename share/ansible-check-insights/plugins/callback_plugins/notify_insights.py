@@ -93,9 +93,9 @@ class CallbackModule(CallbackBase):
 
     def _format_summary_for(self, task_result):
         if task_result["_insights_event_name"] == "passed":
-            icon = stringc("ok", C.COLOR_OK) 
+            icon = stringc("passed", C.COLOR_OK) 
         elif task_result["_insights_event_name"] == "failed":
-            icon = stringc("no", C.COLOR_ERROR)
+            icon = stringc("failed", C.COLOR_ERROR)
         elif task_result["_insights_event_name"] == "fatal":
             icon = stringc("ERROR", C.COLOR_ERROR)
         else:
