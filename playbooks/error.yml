@@ -1,0 +1,19 @@
+---
+- hosts: all
+  become: true
+  tasks:
+
+  # The tasks in this playbook intentially have errors: running Debian's apt on Red Hat systems
+  # This can be used to show what Insights Check Mode does when a task has errorsq
+
+  - name: this will always ERROR
+    apt:
+      name: kernel
+      state: latest
+    when: ansible_os_family == "RedHat"
+
+  - name: this will always ERROR
+    yum:
+      name: kernel
+      state: latest
+    when: ansible_os_family == "Debian"

@@ -73,7 +73,7 @@ The command 'ansible-check-insights' takes exactly the same arguments as 'ansibl
 
 Playbooks for Insights Check Mode
 
-There are currently three example Playbooks:
+There are currently several example Playbooks:
 
    playbooks/no-dummy-hostname.yml
      Which fails if a system's hostname is 'localhost'.
@@ -83,6 +83,14 @@ There are currently three example Playbooks:
    
    playbooks/prelink-absent-check.yml
      Which checks that a system does not have the prelink package installed.
+
+   playbooks/examples.yml
+     Which shows more examples of how to write checks/tests
+
+   playbooks/error.yml
+     A playbook with a task which will always fails to run correctly,
+     showing how Insight Check Mode treats cases like this
+
 
 Run these playbooks in Insights Check Mode:
   ./ansible-check-insights --limit=<HOST PATTERN> <CHECK PLAYBOOK>

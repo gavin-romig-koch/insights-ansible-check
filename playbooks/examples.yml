@@ -1,0 +1,48 @@
+---
+- hosts: all
+  become: true
+  tasks:
+
+  # The purpose of Insights Check Mode is to check that a system is in a particular state
+
+  # There are several ways to access and check the state of system. 
+
+  # In some cases the state of the system is accessable through a fact that can be checked:
+
+
+    # In Insights Check Mode, the following check task 
+    #    passes if the fact 'ansible_fips' is true,
+    #    and fails otherwise
+  - name: fips mode must be enabled
+    check:
+      that: ansible_fips
+
+    # In Insights Check Mode, the following check task 
+    #    passes if the fact 'ansible_hostname' is not "localhost"
+    #    and fails otherwise
+  - name: hostname must not be "localhost"
+    check:
+      that: ansible_hostname != 'localhost'
+
+
+
+  # In other cases, the state of the system is accessable through a module run in --check mode 
+
+  - name: prelink package must be absent (not installed)
+    package:
+      name: prelink
+      state: absent
+
+  - name: kernel package must be the latest
+    package:
+      name: kernel
+      state: latest
+
+  - name: sshd config file must be owned by root and only readable by root
+    file:
+      path: /etc/ssh/sshd_config
+      owner: root
+      group: root
+      mode: 0600
+
+
