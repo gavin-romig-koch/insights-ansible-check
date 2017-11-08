@@ -17,10 +17,9 @@ ends with a status "ok", the conformance test passes.  If the task ends with a s
 the conformance test fails.  If the task is skipped, the task is ignored for the purposes of
 conformance testing.  Any other task status is treated as an error in the conformance testing.
 
-When a playbook is run in Insights Check Mode, the result will (in some beautiful future) be
-forwarded to the Insights server.  Until we have a way to forward the result to Insights, we
-just print the interpreted results out.  A new "CHECKMODE SUMMARY" is added to the end
-of the normal output from running the playbook.  
+When a playbook is run in Insights Check Mode, the result will be forwarded to the Insights
+server.  A new "CHECKMODE SUMMARY" is added to the end of the normal output from running
+the playbook.
 
 In the example below are two RHEL 6.6 machines, one with FIPS mode enabled one without::
 
@@ -104,6 +103,22 @@ always run in Ansible's ``--check`` mode, Ansible tasks using some Ansible Modul
 no-ops in Insights Check Mode.  Some Ansible modules are, by default, skipped when run
 in ``--check`` mode, most notably the 'shell' and 'command' modules.  In Insights Check Mode,
 any task that is skipped, is ignored.
+
+
+Sending Data to Insights
+------
+
+In order to send data to Insights, ``ansible-check-insights`` must log into Insights.  For
+now this can only be done with BASIC AUTH.
+
+Put the following in ``~/.insights.conf``::
+  [insights-client]
+  username=<USERNAME>
+  password=<PASSWORD>
+
+Where ``<USERNAME>`` and ``<PASSWORD>`` are valid for Red Hat Insights (Red Hat Portal,
+RHN, or RHSM).
+
 
 Installing 'ansible-check-insights'
 ------
