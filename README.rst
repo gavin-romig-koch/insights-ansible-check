@@ -7,7 +7,11 @@ The general idea is that we run mostly normal Ansible playbooks in ``--check`` m
 interpret the result of each task in the playbook as a conformance test, and then forward
 those interpreted results to Insights for display::
 
-   ./ansible-check-insights -l localhost playbooks/no-dummy-hostname.yml
+   ./ansible-check-insights --limit=localhost playbooks/no-dummy-hostname.yml
+
+Ansible must be installed and an Ansible inventory file created for any of the examples
+in this README to work.  See `Ansible Installation
+<http://docs.ansible.com/ansible/latest/intro_installation.html>`_.
 
 Insights Check Mode
 ---------
