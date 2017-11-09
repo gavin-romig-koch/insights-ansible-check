@@ -166,7 +166,9 @@ class CallbackModule(CallbackBase):
             self._display.banner("CHECKMODE SUMMARY")
             self.banner_printed = True
             if not (self.username and self.password):
-                self._display.display("Not sending results to Insights, username/password not available")
+                self._display.display("\tNot sending results to Insights, username/password not available")
+                self._display.display("")
+
         # Print out a short summary of the test tasks
         if "insights_system_id" in report:
             self._display.display("%s\t\t%s" % (report["host"], report["insights_system_id"]))
@@ -183,6 +185,8 @@ class CallbackModule(CallbackBase):
                self._put_report(report)
             else:
                 self._display.display("No system_id for %s" % (report["host"]))
+
+        self._display.display("")
 
 
     def _format_summary_for(self, task_result):
