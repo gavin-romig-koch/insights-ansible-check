@@ -210,7 +210,7 @@ class CallbackModule(CallbackBase):
                     "result": each["_insights_event_name"]
                 })
 
-        url = "https://cert-api.access.redhat.com/r/insights/v3/systems/%s/policies/%s-2" % (report["insights_system_id"], self.playbook_name)
+        url = "https://cert-api.access.redhat.com/r/insights/v3/systems/%s/policies/%s" % (report["insights_system_id"], self.playbook_name)
         headers = {'Content-Type': 'application/json'}
 
         self._display.display("PUT %s" % url)
