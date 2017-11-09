@@ -125,16 +125,25 @@ any task that is skipped, is ignored.
 Sending Data to Insights
 ------
 
-In order to send data to Insights, ``ansible-check-insights`` must log into Insights.  For
-now this can only be done with BASIC AUTH.
+To send Insights Check Mode data to the Insights service, two things must be true.  First,
+``ansible-check-insights`` must log into Insights from the control system.  Second, it
+must be able to get the Insights System ID off each target system.
 
-Put the following in ``~/.insights.conf``::
+For ``ansible-check-insights`` to be able to log into Insights from the control system, you
+must put a Red Hat username/password in ``~/.insights.conf``::
   [insights-client]
   username=<USERNAME>
   password=<PASSWORD>
 
 Where ``<USERNAME>`` and ``<PASSWORD>`` are valid for Red Hat Insights (Red Hat Portal,
 RHN, or RHSM).
+
+For ``ansible-check-insights`` to be able to get the Insights System ID off each target system,
+the Insights collector (redhat-access-insights) must be installed and registered on each target
+system, and the Insights fact plugin must be installed on each target system.  The
+``insights-installer.yml`` playbook in ``support-playbooks`` will ensure both of these are true::
+
+  ansible-playbook -l <HOSTLIST> support-playbooks/insights-installer.yml
 
 
 Installing 'ansible-check-insights'
