@@ -50,21 +50,23 @@ In the example below are two RHEL 6.6 machines, one with FIPS mode enabled one w
     gavin-rhel66-yesfips		31efea29-6020-4dfa-be47-f1aca02fba28
         passed : fips mode must be enabled
 
-In the CHECKMODE SUMMARY, the final "passed" and "failed" are the important bits.  The label "failed" is a
-big red "X", no this system is NOT in fips mode.  The label "passed" is a green checkmark, yes the
-system is in fips mode.  
+In the CHECKMODE SUMMARY, the final "passed" and "failed" are the important bits.  The label
+"failed" is a big red "X", no this system is NOT in fips mode.  The label "passed" is a green
+checkmark, yes the system is in fips mode.
 
-When a playbook is run in --check mode, the status "changed" doen't mean actually changed, it means would
-have been changed, not in the state specified by the task.  This is why we map "changed" to "failed".
+When a playbook is run in --check mode, the status "changed" doen't mean actually changed, it
+means would have been changed, not in the state specified by the task.  This is why we map
+"changed" to "failed".
 
 The status "ok" means the system is in the state specified by the task, so we map that to "passed".
 
-Note that the status "ok" is also returned for tasks that don't specify a state for the system, but instead
-just gather facts, or other information from the system.  The initial, implicit, "Gathering Facts" task is
-an example of this.  It would be better if Insights Check Mode didn't treat these two different meanings of
-"ok" the same; if the task is just a fact gathering task, it should not be treated as a conformance test,
-but in general these two cases can not be distinguished.  In the specific case of the "Gathering Facts" task,
-we can distinguish that instance, and not include it in the CHECKMODE SUMMARY.
+Note that the status "ok" is also returned for tasks that don't specify a state for the system,
+but instead just gather facts, or other information from the system.  The initial, implicit,
+"Gathering Facts" task is an example of this.  It would be better if Insights Check Mode didn't
+treat these two different meanings of "ok" the same; if the task is just a fact gathering task,
+it should not be treated as a conformance test, but in general these two cases can not be
+distinguished.  In the specific case of the "Gathering Facts" task, we can distinguish that
+instance, and not include it in the CHECKMODE SUMMARY.
 
 
 The Insights Check Mode command:
