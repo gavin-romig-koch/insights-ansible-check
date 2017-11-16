@@ -75,41 +75,6 @@ class insights_constants(object):
     docker_image_name = None
     default_cmd_timeout = 600  # default command execution to ten minutes, prevents long running commands that will hang
 
-def parse_config_file(conf_file):
-    """
-    Parse the configuration from the file
-    """
-    parsedconfig = ConfigParser.RawConfigParser(
-        {'loglevel': insights_constants.log_level,
-         'trace': 'False',
-         'app_name': insights_constants.app_name,
-         'auto_config': 'True',
-         'authmethod': insights_constants.auth_method,
-         'base_url': insights_constants.base_url,
-         'upload_url': None,
-         'api_url': None,
-         'branch_info_url': None,
-         'auto_update': 'True',
-         'collection_rules_url': None,
-         'obfuscate': 'False',
-         'obfuscate_hostname': 'False',
-         'cert_verify': insights_constants.default_ca_file,
-         'gpg': 'True',
-         'username': None,
-         'password': None,
-         'systemid': None,
-         'proxy': None,
-         'insecure_connection': 'False',
-         'no_schedule': 'False',
-         'docker_image_name': '',
-         'display_name': None})
-    try:
-        parsedconfig.read(conf_file)
-    except ConfigParser.Error:
-        #display._display("ERROR: Could not read configuration file, using defaults")
-        pass
-    return parsedconfig
-
 class CallbackModule(CallbackBase):
     """
     """
@@ -139,7 +104,7 @@ class CallbackModule(CallbackBase):
         if path:
             possible_conf_paths.append(path)
 
-        self.insights_config = parse_config_file(possible_conf_paths)
+        self.insights_config = self.parse_config_file(possible_conf_paths)
 
         self.insights_config_section = None
         for each in ["insights-client", "redhat-access-insights", "redhat_access_insights"]:
@@ -153,6 +118,41 @@ class CallbackModule(CallbackBase):
         else:
             self.username = None
             self.password = None
+
+    def parse_config_file(self, conf_file):
+        """
+        Parse the configuration from the file
+        """
+        parsedconfig = ConfigParser.RawConfigParser(
+            {'loglevel': insights_constants.log_level,
+             'trace': 'False',
+             'app_name': insights_constants.app_name,
+             'auto_config': 'True',
+             'authmethod': insights_constants.auth_method,
+             'base_url': insights_constants.base_url,
+             'upload_url': None,
+             'api_url': None,
+             'branch_info_url': None,
+             'auto_update': 'True',
+             'collection_rules_url': None,
+             'obfuscate': 'False',
+             'obfuscate_hostname': 'False',
+             'cert_verify': insights_constants.default_ca_file,
+             'gpg': 'True',
+             'username': None,
+             'password': None,
+             'systemid': None,
+             'proxy': None,
+             'insecure_connection': 'False',
+             'no_schedule': 'False',
+             'docker_image_name': '',
+             'display_name': None})
+        try:
+            parsedconfig.read(conf_file)
+        except ConfigParser.Error:
+            self._display.vvv("Could not read configuration file, using defaults")
+            pass
+        return parsedconfig
 
     def _build_log(self, data):
         logs = []
@@ -171,7 +171,7 @@ class CallbackModule(CallbackBase):
         if not self.banner_printed:
             self._display.banner("CHECKMODE SUMMARY")
             self.banner_printed = True
-            if not (self.username and self.password):
+            if not self.username:
                 self._display.display("\tNot sending results to Insights, username/password not available")
                 self._display.display("")
 
@@ -184,9 +184,8 @@ class CallbackModule(CallbackBase):
         for each in report["task_results"]:
             if each["_insights_event_name"] != "skipped":
                 self._display.display(self._format_summary_for(each))
-                #print(json.dumps(each, indent=2))
 
-        if self.username and self.password:
+        if self.username:
             if "insights_system_id" in report:
                self._put_report(report)
             else:
@@ -231,9 +230,9 @@ class CallbackModule(CallbackBase):
             except:
                 pass
 
-        self._display.display("PUT %s" % url)
-        self._display.display("VERIFY %s" % verify)
-        self._display.display(json.dumps(policy_result, indent=2))
+        self._display.vvv("PUT %s" % url)
+        self._display.vvv("VERIFY %s" % verify)
+        self._display.vvv(json.dumps(policy_result, indent=2))
         res = requests.put(url=url,
                            data=json.dumps(policy_result),
                            headers=headers,
@@ -242,17 +241,17 @@ class CallbackModule(CallbackBase):
                            verify=verify)
         if (res.status_code == 201 or res.status_code == 200) \
            and 'Content-Type' in res.headers and 'json' in res.headers['Content-Type']:
-            self._display.display("RESULT:")
-            self._display.display(json.dumps(json.loads(res.content), indent=2))
+            self._display.vvv("RESULT:")
+            self._display.vvv(json.dumps(json.loads(res.content), indent=2))
         else:
             content_type = None
             if 'Content-Type' in res.headers:
                 content_type = res.headers['Content-Type']
-            self._display.display('For {}, Unexpected Status Code({}) or Content-Type({}) with content "{}".'.format(url, res.status_code, content_type, res.content))
+            self._display.warning('For {}, Unexpected Status Code({}) or Content-Type({}) with content "{}".'.format(url, res.status_code, content_type, res.content))
             if not self.username:
-                self._display.display("Username is empty or None")
+                self._display.warning("Username is empty or None")
             if not self.password:
-                self._display.display("Password is empty or None")
+                self._display.warning("Password is empty or None")
 
     def send_reports(self, stats):
         """
