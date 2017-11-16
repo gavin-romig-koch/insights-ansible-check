@@ -22,6 +22,7 @@ import time
 import os
 import requests
 import ConfigParser
+import warnings
 
 from ansible import constants as C
 from ansible.playbook.task_include import TaskInclude
@@ -233,12 +234,15 @@ class CallbackModule(CallbackBase):
         self._display.vvv("PUT %s" % url)
         self._display.vvv("VERIFY %s" % verify)
         self._display.vvv(json.dumps(policy_result, indent=2))
-        res = requests.put(url=url,
-                           data=json.dumps(policy_result),
-                           headers=headers,
-                           auth=(self.username, self.password),
-                           #cert=cert
-                           verify=verify)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore",
+                                  requests.packages.urllib3.exceptions.SubjectAltNameWarning)
+            res = requests.put(url=url,
+                               data=json.dumps(policy_result),
+                               headers=headers,
+                               auth=(self.username, self.password),
+                               #cert=cert
+                               verify=verify)
         if (res.status_code == 201 or res.status_code == 200) \
            and 'Content-Type' in res.headers and 'json' in res.headers['Content-Type']:
             self._display.vvv("RESULT:")
