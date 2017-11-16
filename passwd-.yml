@@ -1,0 +1,15 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+  - name: "SCORED | 6.1.6 | PATCH | Ensure permissions on /etc/passwd- are configured"
+    file:
+        dest: /etc/passwd-
+        owner: root
+        group: root
+        mode: 0600
+    tags:
+        - level1
+        - level2
+        - patch
+        - rule_6.1.6
