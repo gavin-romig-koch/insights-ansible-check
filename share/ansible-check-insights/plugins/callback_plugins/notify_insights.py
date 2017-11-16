@@ -36,6 +36,12 @@ for each in ['insights-client', 'redhat-access-insights']:
         found_default_conf_dir = os.path.join('/etc', each)
         break
 
+possible_CA_VERIFY_files = [
+    "/etc/rhsm/ca/redhat-uep.pem",
+    "/etc/redhat-access-insights/cert-api.access.redhat.com.pem",
+    "/etc/insights-client/cert-api.access.redhat.com.pem",
+]
+
 class insights_constants(object):
     app_name = 'insights-request'
     conf_name = found_conf_name
@@ -216,15 +222,24 @@ class CallbackModule(CallbackBase):
 
         url = "https://cert-api.access.redhat.com/r/insights/v3/systems/%s/policies/%s" % (report["insights_system_id"], self.playbook_name)
         headers = {'Content-Type': 'application/json'}
+        verify = False
+        for filename in possible_CA_VERIFY_files:
+            try:
+                with open(filename):
+                    verify = filename
+                break
+            except:
+                pass
 
         self._display.display("PUT %s" % url)
+        self._display.display("VERIFY %s" % verify)
         self._display.display(json.dumps(policy_result, indent=2))
         res = requests.put(url=url,
                            data=json.dumps(policy_result),
                            headers=headers,
                            auth=(self.username, self.password),
                            #cert=cert
-                           verify=False)
+                           verify=verify)
         if (res.status_code == 201 or res.status_code == 200) \
            and 'Content-Type' in res.headers and 'json' in res.headers['Content-Type']:
             self._display.display("RESULT:")
