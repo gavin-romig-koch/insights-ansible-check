@@ -157,5 +157,7 @@ the examples above do.
 It can also be install onto a host::
 
     sudo make install
+  or
+    sudo make uninstall
 
-will install both the command and the associate Ansible plugins onto the current system.
+will install/uninstall both the command and the associate Ansible plugins onto the current system.
