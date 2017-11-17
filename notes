@@ -1,0 +1,64 @@
+
+
+Use this demo to promote the idea of useing --check mode for itself,
+  and for enhancing --check mode to support that usage
+
+
+
+
+  
+insights' customers wanting their own custom rules
+
+difficulties of custom rules
+
+   security issues mean we have to run rules on customer's systems
+     and ship the results to Insights
+
+   customer may have to learn Python
+
+   customer must learn our rules writing framework
+
+
+Ansible Playbooks as Custom Insights Rules
+
+   while thinking about Insights x Ansible, we asked ourselves,
+      Could custom Insights rules just be Ansible playbooks run in --check mode
+
+   run the playbooks in --check mode, send the results to Insights,
+      and interpret any "changed" results as "rule hits"
+
+   playbooks already run on customer's systems
+
+   customer may have to learn Ansible, but at least it's not
+      a single use skill
+
+
+
+Initial Working Sketch 
+
+   new Insights service endpoint for uploading playbook results
+
+   new Ansible callback plugin to collect, interpret, and upload results
+
+   new "check" module so fact checks can be interpreted like module checks
+
+   new command 'ansible-check-insights' to make it easy to run playbooks
+     in --check mode with the plugins enabled
+
+
+
+Ansible --check mode Enhancement
+
+   this is just the beginning
+
+   want to enhance *Ansible's* --check mode, not build an Insights Mode
+
+       we choose Ansible because it's general purpose,
+
+   Automated "checking" has become a topic
+
+       Chef Inspec and OpenScap
+
+   Any enhancements Ansibles --check mode will also help the Insights case
+
+   
