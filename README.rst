@@ -154,10 +154,9 @@ Installing 'ansible-check-insights'
 The command ``ansible-check-insights`` can be run directly from within the git repo, as all
 the examples above do.
 
-It can also be install onto a host::
+It can also be install onto a system::
 
-    sudo make install
-  or
-    sudo make uninstall
+    sudo pip install .
 
-will install/uninstall both the command and the associate Ansible plugins onto the current system.
+will install both the command and the associate Ansible plugins onto the current system.
+
