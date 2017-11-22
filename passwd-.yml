@@ -2,7 +2,13 @@
 - hosts: all
   become: yes
   tasks:
+
+  - stat:
+        path: /etc/passwd-
+    register: passwd_minus_task
+
   - name: "SCORED | 6.1.6 | PATCH | Ensure permissions on /etc/passwd- are configured"
+    when: passwd_minus_task.stat.exists
     file:
         dest: /etc/passwd-
         owner: root
