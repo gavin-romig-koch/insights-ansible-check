@@ -7,7 +7,7 @@ The general idea is that we run mostly normal Ansible playbooks in ``--check`` m
 interpret the result of each task in the playbook as a conformance test, and then forward
 those interpreted results to Insights for display::
 
-   ./ansible-check-insights --limit=localhost playbooks/no-dummy-hostname.yml
+   ./insights-ansible-check --limit=localhost playbooks/no-dummy-hostname.yml
 
 Ansible must be installed and an Ansible inventory file created for any of the examples
 in this README to work.  See `Ansible Installation
@@ -27,7 +27,7 @@ the playbook.
 
 In the example below are two RHEL 6.6 machines, one with FIPS mode enabled one without::
 
-    $ ./ansible-check-insights --limit=gavin-rhel66-nofips,gavin-rhel66-yesfips playbooks/fips-mode-check.yml 
+    $ ./insights-ansible-check --limit=gavin-rhel66-nofips,gavin-rhel66-yesfips playbooks/fips-mode-check.yml 
 
     PLAY [all] *********************************************************************
 
@@ -72,14 +72,14 @@ instance, and not include it in the CHECKMODE SUMMARY.
 The Insights Check Mode command:
 ----------
 
-The command ``ansible-check-insights`` runs an Ansible playbook in Insights Check Mode.  This
+The command ``insights-ansible-check`` runs an Ansible playbook in Insights Check Mode.  This
 command is just a wrapper around the ``ansible-playbook`` command.
 
-Ansible must be installed on the system where you run the ansible-check-insights command, and
-you must have set up an Ansible Inventory for any systems you want to run ``ansible-check-insights``
+Ansible must be installed on the system where you run the insights-ansible-check command, and
+you must have set up an Ansible Inventory for any systems you want to run ``insights-ansible-check``
 against.
 
-The command ``ansible-check-insights`` takes exactly the same arguments as ``ansible-playbook``
+The command ``insights-ansible-check`` takes exactly the same arguments as ``ansible-playbook``
 
 Playbooks for Insights Check Mode
 ------
@@ -105,7 +105,7 @@ playbooks/error.yml
 
 Run these playbooks in Insights Check Mode::
 
-    ./ansible-check-insights --limit=<HOST PATTERN> <CHECK PLAYBOOK>
+    ./insights-ansible-check --limit=<HOST PATTERN> <CHECK PLAYBOOK>
 
 where ``<HOST PATTERN>`` is a comma separated list of hosts to run the check against 
 ``<CHECK PLAYBOOK>`` is one of :
@@ -128,10 +128,10 @@ Sending Data to Insights
 ------
 
 To send Insights Check Mode data to the Insights service, two things must be true.  First,
-``ansible-check-insights`` must log into Insights from the control system.  Second, it
+``insights-ansible-check`` must log into Insights from the control system.  Second, it
 must be able to get the Insights System ID off each target system.
 
-For ``ansible-check-insights`` to be able to log into Insights from the control system, you
+For ``insights-ansible-check`` to be able to log into Insights from the control system, you
 must put a Red Hat username/password in ``~/.insights.conf``::
   [insights-client]
   username=<USERNAME>
@@ -140,7 +140,7 @@ must put a Red Hat username/password in ``~/.insights.conf``::
 Where ``<USERNAME>`` and ``<PASSWORD>`` are valid for Red Hat Insights (Red Hat Portal,
 RHN, or RHSM).
 
-For ``ansible-check-insights`` to be able to get the Insights System ID off each target system,
+For ``insights-ansible-check`` to be able to get the Insights System ID off each target system,
 the Insights collector (redhat-access-insights) must be installed and registered on each target
 system, and the Insights fact plugin must be installed on each target system.  The
 ``insights-installer.yml`` playbook in ``support-playbooks`` will ensure both of these are true::
@@ -148,10 +148,10 @@ system, and the Insights fact plugin must be installed on each target system.  T
   ansible-playbook -l <HOSTLIST> support-playbooks/insights-installer.yml
 
 
-Installing 'ansible-check-insights'
+Installing 'insights-ansible-check'
 ------
 
-The command ``ansible-check-insights`` can be run directly from within the git repo, as all
+The command ``insights-ansible-check`` can be run directly from within the git repo, as all
 the examples above do.
 
 It can also be install onto a system::
