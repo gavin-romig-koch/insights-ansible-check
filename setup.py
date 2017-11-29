@@ -16,7 +16,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='ansible-check-insights',
+    name='insights-ansible-check',
 
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
@@ -55,13 +55,13 @@ setup(
     install_requires=['ansible', 'requests'],
 
     data_files=[
-	('bin', ['bin/ansible-check-insights']),
-	('share/ansible-check-insights/plugins/action_plugins', ['share/ansible-check-insights/plugins/action_plugins/check.py']),
-	('share/ansible-check-insights/plugins/callback_plugins', ['share/ansible-check-insights/plugins/callback_plugins/notify_insights.py']),
-	('share/ansible-check-insights/plugins/library', ['share/ansible-check-insights/plugins/library/check.py']),
+	('bin', ['bin/insights-ansible-check']),
+	('share/insights-ansible-check/plugins/action_plugins', ['share/insights-ansible-check/plugins/action_plugins/check.py']),
+	('share/insights-ansible-check/plugins/callback_plugins', ['share/insights-ansible-check/plugins/callback_plugins/notify_insights.py']),
+	('share/insights-ansible-check/plugins/library', ['share/insights-ansible-check/plugins/library/check.py']),
     ],
 
     scripts=[
-        'bin/ansible-check-insights',
+        'bin/insights-ansible-check',
     ],
 )
