@@ -53,6 +53,9 @@ setup(
     ],
 
     install_requires=['ansible', 'requests'],
+    extras_require={
+        'develop': ['pytest'],
+        },
 
     data_files=[
 	('bin', ['bin/insights-ansible-check']),
