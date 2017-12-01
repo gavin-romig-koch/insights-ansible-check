@@ -156,19 +156,20 @@ class CallbackModule(CallbackBase):
         return parsedconfig
 
     def _build_log(self, data):
-        logs = []
+        policy_result = {
+            "raw_output": "",
+            "check_results": []
+        }
         for event_name, task_title, result in data:
-            r = result.copy()
-            if "ansible_facts" in r:
-                del r["ansible_facts"]
-            
-            r["_insights_event_name"] = event_name
-            r["_insights_task_title"] = task_title
+            if event_name != "skipped":
+                policy_result["check_results"].append({
+                    "name": task_title,
+                    "result": event_name,
+                })
 
-            logs.append(r)
-        return logs
+        return policy_result
 
-    def send_report(self,report):
+    def send_report(self, host, insights_system_id, policy_result):
         if not self.banner_printed:
             self._display.banner("CHECKMODE SUMMARY")
             self.banner_printed = True
@@ -177,50 +178,39 @@ class CallbackModule(CallbackBase):
                 self._display.display("")
 
         # Print out a short summary of the test tasks
-        if "insights_system_id" in report:
-            self._display.display("%s\t\t%s" % (report["host"], report["insights_system_id"]))
+        if insights_system_id:
+            self._display.display("%s\t\t%s" % (host, insights_system_id))
         else:
-            self._display.display("%s" % (report["host"]))
+            self._display.display("%s" % (host))
 
-        for each in report["task_results"]:
-            if each["_insights_event_name"] != "skipped":
-                self._display.display(self._format_summary_for(each))
+        for each in policy_result["check_results"]:
+            self._display.display(self._format_summary_for(each))
 
         if self.username:
-            if "insights_system_id" in report:
-               self._put_report(report)
+            if insights_system_id:
+                self._put_report(insights_system_id, policy_result)
             else:
-                self._display.display("No system_id for %s" % (report["host"]))
+                self._display.display("No system_id for %s" % (host))
 
         self._display.display("")
 
 
     def _format_summary_for(self, task_result):
-        if task_result["_insights_event_name"] == "passed":
+        if task_result["result"] == "passed":
             icon = stringc("passed", C.COLOR_OK) 
-        elif task_result["_insights_event_name"] == "failed":
+        elif task_result["result"] == "failed":
             icon = stringc("failed", C.COLOR_ERROR)
-        elif task_result["_insights_event_name"] == "fatal":
+        elif task_result["result"] == "fatal":
             icon = stringc("ERROR", C.COLOR_ERROR)
         else:
-            icon = stringc(task_result["_insights_event_name"], C.COLOR_DEBUG)
+            icon = stringc(task_result["result"], C.COLOR_DEBUG)
 
-        return "    %s : %s"  % (icon, task_result["_insights_task_title"])
+        return "    %s : %s"  % (icon, task_result["name"])
     
 
-    def _put_report(self, report):
-        policy_result = {
-            "raw_output": "",
-            "check_results": []
-        }
-        for each in report["task_results"]:
-            if each["_insights_event_name"] != "skipped":
-                policy_result["check_results"].append({
-                    "name": each["_insights_task_title"],
-                    "result": each["_insights_event_name"]
-                })
+    def _put_report(self, insights_system_id, policy_result):
 
-        url = "https://cert-api.access.redhat.com/r/insights/v3/systems/%s/policies/%s" % (report["insights_system_id"], self.playbook_name)
+        url = "https://cert-api.access.redhat.com/r/insights/v3/systems/%s/policies/%s" % (insights_system_id, self.playbook_name)
         headers = {'Content-Type': 'application/json'}
         verify = False
         for filename in possible_CA_VERIFY_files:
@@ -257,31 +247,14 @@ class CallbackModule(CallbackBase):
             if not self.password:
                 self._display.warning("Password is empty or None")
 
-    def send_reports(self, stats):
-        """
-        """
-        status = defaultdict(lambda: 0)
-        metrics = {}
-
+    def send_reports(self):
         self.banner_printed = False
-        for host in stats.processed.keys():
-            sum = stats.summarize(host)
-            status["applied"] = sum['changed']
-            status["failed"] = sum['failures'] + sum['unreachable']
-            status["skipped"] = sum['skipped']
-            log = self._build_log(self.items[host])
-            metrics["time"] = {"total": int(time.time()) - self.start_time}
-            now = datetime.now().strftime(self.TIME_FORMAT)
-            report = {
-                "host": host,
-                "reported_at": now,
-                "metrics": metrics,
-                "status": status,
-                "task_results": log,
-            }
+        for host in self.items.keys():
             if host in self.insights_system_ids:
-                report["insights_system_id"] = self.insights_system_ids[host]
-            self.send_report(report)
+                insights_system_id = self.insights_system_ids[host]
+            else:
+                insights_system_id = None
+            self.send_report(host, insights_system_id, self._build_log(self.items[host]))
             self.items[host] = []
 
     def append_result(self, result, event_name):
@@ -305,7 +278,10 @@ class CallbackModule(CallbackBase):
             # good enough for now
             return
 
-        self.items[host_name].append((event_name, task_name, result._result))
+        self._append_result(host_name, event_name, task_name, result._result)
+
+    def _append_result(self, host_name, event_name, task_name, task_result):
+        self.items[host_name].append((event_name, task_name, task_result))
 
 
     # Ansible Callback API
@@ -334,4 +310,4 @@ class CallbackModule(CallbackBase):
         self.append_result(result, "unreachable")
 
     def v2_playbook_on_stats(self, stats):
-        self.send_reports(stats)
+        self.send_reports()
